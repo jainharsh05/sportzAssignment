@@ -1,25 +1,22 @@
 import "./App.css";
 import React, { useEffect, useState } from "react";
+import useapi from "./hooks/useapi";
+import getPlayer from "./api/getPlayer";
+import Card from "./components/card";
+import Input from "./components/Input";
 
 function App() {
-  const [player, setPlayer] = useState([]);
-  const [search, setSearch] = useState("");
-  const [tName, setTName] = useState("");
-  const getResult = async () => {
-    const result = await fetch(`https://api.npoint.io/20c1afef1661881ddc9c`);
-    const response = await result.json();
-    return response;
-  };
-
+  const playerData = useapi(getPlayer);
   useEffect(() => {
-    const result = getResult();
-    result.then((data) => setPlayer(data));
+    playerData.request();
   }, []);
 
-  // let playerArray = player.playerList || [];
+  const [search, setSearch] = useState("");
+  const [tName, setTName] = useState("");
+
   let playerArray =
-    player?.playerList?.length > 0
-      ? player?.playerList?.filter((el) => {
+    playerData?.data?.playerList?.length > 0
+      ? playerData?.data?.playerList?.filter((el) => {
           if (search === "" && tName === "") {
             return true;
           } else {
@@ -43,22 +40,6 @@ function App() {
         })
       : [];
 
-  const formatDate = (matchDate) => {
-    var date = new Date(`${matchDate} UTC`);
-    let converteddate = new Date(date.toString());
-    const time = converteddate.toLocaleTimeString();
-    const year = converteddate?.getFullYear();
-    const month =
-      converteddate?.getMonth() + 1 > 9
-        ? converteddate?.getMonth() + 1
-        : `0${converteddate?.getMonth() + 1}`;
-    const Mdate =
-      converteddate?.getDate() > 9
-        ? converteddate?.getDate()
-        : `0${converteddate?.getDate()}`;
-    return `${Mdate}-${month}-${year} ${time}`;
-  };
-
   const handleSearchPFName = (e) => {
     setSearch(e.target.value);
   };
@@ -69,50 +50,24 @@ function App() {
 
   return (
     <div className="App">
-      <input
-        type="text"
-        placeholder="pfName"
-        onChange={(e) => handleSearchPFName(e)}
-      />
-      <input
-        type="text"
-        placeholder="tName"
-        onChange={(e) => handleSearchTName(e)}
-      />
-      <div className="gridClass">
+      <div className="m-3 md:d-flex gap-3">
+        <Input
+          type="text"
+          placeholder="Search Player Name"
+          changehandler={(e) => handleSearchPFName(e)}
+        />
+        <Input
+          type="text"
+          placeholder="Search Team Name"
+          changehandler={(e) => handleSearchTName(e)}
+        />
+      </div>
+
+      <div className="gridClass mb-3">
         {playerArray
           .sort((a, b) => a.Value > b.Value)
           .map((play) => {
-            return (
-              <div key={play.Id} className="card" style={{ width: "18rem" }}>
-                <img
-                  src={`${play?.Id}.jpg`}
-                  className="card-img-top"
-                  alt="..."
-                />
-                <div className="card-body">
-                  <h5 className="card-title">{play?.PFName}</h5>
-                  <p className="card-text">{play?.SkillDesc}</p>
-                  <p className="card-text">{play?.Value} $</p>
-                  <div className="card-text">
-                    upComing Match =
-                    {play.UpComingMatchesList.map((el) => {
-                      return (
-                        <React.Fragment key={el.TID}>
-                          <p>{el.VsCCode} v/s</p>
-                          <p>{el.CCode}</p>
-                          <p>Match Date and time ={formatDate(el.MDate)}</p>
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-
-                  <a href="#" className="btn btn-primary">
-                    Go somewhere
-                  </a>
-                </div>
-              </div>
-            );
+            return <Card key={play.Id} play={play} />;
           })}
       </div>
     </div>
